@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>製造業向け 損益分岐点（原価分解CVP）ツール</title>
+  <style>
+    :root { --r: 14px; --b: 1px solid #ddd; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif; margin: 0; background:#fafafa; color:#111; }
+    .wrap { max-width: 1100px; margin: 22px auto; padding: 0 16px; }
+    h1 { font-size: 20px; margin: 0 0 10px; }
+    .sub { color:#555; font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1.15fr 0.85fr; } }
+    .card { background: #fff; border: var(--b); border-radius: var(--r); padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+    .row { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+    @media (min-width: 760px) { .row { grid-template-columns: 1fr 1fr; } }
+    .row3 { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+    @media (min-width: 760px) { .row3 { grid-template-columns: 1fr 1fr 1fr; } }
+    label { font-size: 12px; color:#444; display:block; margin-bottom: 6px; }
+    input[type="number"], input[type="text"] { width: 100%; padding: 10px; border: var(--b); border-radius: 10px; font-size: 14px; }
+    .hint { font-size: 12px; color:#666; margin-top: 6px; line-height: 1.5; }
+    .kpi { font-size: 22px; font-weight: 900; }
+    table { width:100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { text-align:left; padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    th { font-size: 12px; color:#444; width: 52%; }
+    td { font-size: 14px; }
+    .badge { display:inline-block; padding: 2px 8px; border:1px solid #eee; border-radius:999px; font-size:12px; color:#555; background:#fafafa; }
+    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    button { padding: 10px 12px; border-radius: 12px; border: var(--b); background:#fff; cursor:pointer; font-weight: 700; }
+    button.primary { background:#111; color:#fff; border-color:#111; }
+    button:active { transform: translateY(1px); }
+    .flex { display:flex; gap:10px; align-items:center; justify-content:space-between; }
+    .sliderBox { border:1px solid #eee; border-radius: 12px; padding: 10px; background:#fcfcfc; }
+    input[type="range"] { width: 100%; }
+    .small { font-size: 12px; color:#555; }
+    .warn { color:#b00020; font-weight: 700; }
+    .ok { color:#0a7a2f; font-weight: 800; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>製造業向け 損益分岐点（原価分解CVP）計算ツール</h1>
+    <div class="sub">
+      製品1個あたりの原価を <span class="badge">材料</span> <span class="badge">外注/加工</span> <span class="badge">労務</span> <span class="badge">製造間接費</span> に分け、<b>変動/固定の割合</b>を調整して損益分岐点を算出します。<br/>
+      ※労務費や間接費は、現場の実態に合わせて「どれくらい変動するか」をスライダーで設定してください。
+    </div>
+
+    <div class="grid">
+      <!-- INPUT -->
+      <div class="card">
+        <div class="row3">
+          <div>
+            <label>製品名（任意）</label>
+            <input id="productName" type="text" placeholder="例：アルミ筐体A" />
+          </div>
+          <div>
+            <label>販売単価（円/個）</label>
+            <input id="price" type="number" min="0" step="1" value="10000" />
+          </div>
+          <div>
+            <label>想定販売数量（個/月）</label>
+            <input id="qty" type="number" min="0" step="1" value="200" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>材料費（円/個）</label>
+            <input id="mat" type="number" min="0" step="1" value="2500" />
+            <div class="hint">例：材料・部品・購入品</div>
+          </div>
+          <div>
+            <label>外注/加工費（円/個）</label>
+            <input id="subcon" type="number" min="0" step="1" value="1200" />
+            <div class="hint">例：外注加工、メッキ、熱処理、運送など</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>直接労務費（円/個）</label>
+            <input id="labor" type="number" min="0" step="1" value="1800" />
+            <div class="hint">例：現場作業者の工賃（標準工数×レート）</div>
+          </div>
+          <div>
+            <label>製造間接費（円/個）</label>
+            <input id="moh" type="number" min="0" step="1" value="900" />
+            <div class="hint">例：消耗品、電力、保全、工具、現場共通費の配賦など</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>販管費 固定（円/月）</label>
+            <input id="sgaf" type="number" min="0" step="1" value="800000" />
+            <div class="hint">例：家賃、管理部門人件費、間接固定、保険、システム費など</div>
+          </div>
+          <div>
+            <label>目標利益（円/月）</label>
+            <input id="target" type="number" step="1" value="200000" />
+            <div class="hint">「この利益を出すには？」も計算します（0でもOK）</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="sliderBox">
+            <div class="flex">
+              <div>
+                <div style="font-weight:800;">労務費の変動割合</div>
+                <div class="small">受注量で増減する比率（残りは固定扱い）</div>
+              </div>
+              <div class="mono"><span id="laborVarPct">40</span>%</div>
+            </div>
+            <input id="laborVar" type="range" min="0" max="100" value="40" />
+          </div>
+
+          <div class="sliderBox">
+            <div class="flex">
+              <div>
+                <div style="font-weight:800;">間接費の変動割合</div>
+                <div class="small">電力・消耗品など数量連動する比率（残りは固定扱い）</div>
+              </div>
+              <div class="mono"><span id="mohVarPct">60</span>%</div>
+            </div>
+            <input id="mohVar" type="range" min="0" max="100" value="60" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="calcBtn">再計算</button>
+          <button id="resetBtn">サンプルに戻す</button>
+          <button id="shareBtn">入力値をURLに保存</button>
+        </div>
+
+        <div class="hint">
+          <b>見方のコツ：</b>スライダーを動かして「現場の実態（残業・派遣・外注・稼働率）」に合わせると、損益分岐点が現実に寄ります。<br/>
+          例：受注で残業や派遣を増やすなら労務の変動割合は高め。固定給中心なら低め。
+        </div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <div style="font-size:12px; color:#444;">損益分岐点売上高（円/月）</div>
+            <div class="kpi" id="beSales">-</div>
+            <div class="hint" id="beMeta">-</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px; color:#444;">現在の見込み</div>
+            <div class="kpi" id="curProfit">-</div>
+            <div class="hint" id="curMeta">-</div>
+          </div>
+        </div>
+
+        <table>
+          <tbody>
+            <tr>
+              <th>限界利益（円/個）</th>
+              <td id="cmPerUnit">-</td>
+            </tr>
+            <tr>
+              <th>限界利益率（%）</th>
+              <td id="cmRate">-</td>
+            </tr>
+            <tr>
+              <th>損益分岐点数量（個/月）</th>
+              <td id="beQty">-</td>
+            </tr>
+            <tr>
+              <th>安全余裕率（%）</th>
+              <td id="mos">-</td>
+            </tr>
+            <tr>
+              <th>目標利益達成に必要な売上高（円/月）</th>
+              <td id="needSales">-</td>
+            </tr>
+            <tr>
+              <th>目標利益達成に必要な数量（個/月）</th>
+              <td id="needQty">-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px; padding:12px; border:1px dashed #e5e5e5; border-radius:12px;">
+          <div style="font-weight:900; margin-bottom:6px;">原価内訳（1個あたり）</div>
+          <div class="small">※スライダーを反映した「変動費」「固定費（換算）」を表示</div>
+          <table>
+            <tbody>
+              <tr><th>変動費（円/個）</th><td id="varCost">-</td></tr>
+              <tr><th>固定費（円/月）</th><td id="fixedCost">-</td></tr>
+              <tr><th>固定費（1個あたり換算・参考）</th><td id="fixedPerUnit">-</td></tr>
+            </tbody>
+          </table>
+          <div class="hint">固定費の「1個あたり換算」は、入力した販売数量で割った参考値です（分岐点計算は固定費合計で行います）。</div>
+        </div>
+
+        <div class="hint" id="alerts"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+
+  const fmtYen = (n) => {
+    if (!isFinite(n)) return "-";
+    return Math.round(n).toLocaleString("ja-JP") + " 円";
+  };
+  const fmtNum = (n) => {
+    if (!isFinite(n)) return "-";
+    return Math.round(n).toLocaleString("ja-JP");
+  };
+  const fmtPct = (n) => {
+    if (!isFinite(n)) return "-";
+    return (Math.round(n * 10) / 10).toLocaleString("ja-JP") + " %";
+  };
+
+  const stateFromInputs = () => ({
+    productName: el("productName").value.trim(),
+    price: Number(el("price").value),
+    qty: Number(el("qty").value),
+    mat: Number(el("mat").value),
+    subcon: Number(el("subcon").value),
+    labor: Number(el("labor").value),
+    moh: Number(el("moh").value),
+    sgaf: Number(el("sgaf").value),
+    target: Number(el("target").value),
+    laborVar: Number(el("laborVar").value) / 100,
+    mohVar: Number(el("mohVar").value) / 100,
+  });
+
+  const setSliderLabels = () => {
+    el("laborVarPct").textContent = el("laborVar").value;
+    el("mohVarPct").textContent = el("mohVar").value;
+  };
+
+  const calc = () => {
+    setSliderLabels();
+    const s = stateFromInputs();
+
+    // validation
+    const alerts = [];
+    const anyNeg = Object.entries(s).some(([k,v]) => typeof v === "number" && isFinite(v) && v < 0);
+    if (anyNeg) alerts.push("マイナス値が入っています。通常は0以上を推奨。");
+    if (!(s.price > 0)) alerts.push("販売単価が0以下です。分岐点が計算できません。");
+    if (!(s.qty >= 0)) alerts.push("販売数量が不正です。");
+
+    // split variable/fixed (per unit items)
+    const laborVarCost = s.labor * s.laborVar;
+    const laborFixPart = s.labor * (1 - s.laborVar);
+
+    const mohVarCost = s.moh * s.mohVar;
+    const mohFixPart = s.moh * (1 - s.mohVar);
+
+    const varCostPerUnit = s.mat + s.subcon + laborVarCost + mohVarCost;
+
+    // fixed per month: SGA fixed + (fixed parts converted to monthly using qty assumption)
+    // For break-even, fixed should be "total fixed per month". Here we estimate fixed parts from per-unit inputs by multiplying by qty.
+    // (User can set qty to their normal production level for the month.)
+    const fixedFromPerUnitMonthly = (laborFixPart + mohFixPart) * s.qty;
+    const fixedMonthly = s.sgaf + fixedFromPerUnitMonthly;
+
+    const cmPerUnit = s.price - varCostPerUnit; // contribution margin
+    const cmRate = s.price > 0 ? (cmPerUnit / s.price) * 100 : NaN;
+
+    let beQty = NaN, beSales = NaN;
+    if (cmPerUnit > 0) {
+      beQty = fixedMonthly / cmPerUnit;
+      beSales = beQty * s.price;
+    } else {
+      alerts.push("限界利益（単価−変動費）が0以下です。単価・変動費の見直しが必要です。");
+    }
+
+    // current projection
+    const curSales = s.price * s.qty;
+    const curVarTotal = varCostPerUnit * s.qty;
+    const curProfit = curSales - curVarTotal - fixedMonthly;
+
+    // margin of safety
+    const mos = (isFinite(beSales) && beSales > 0 && curSales >= 0) ? ((curSales - beSales) / curSales) * 100 : NaN;
+
+    // target profit requirements
+    let needQty = NaN, needSales = NaN;
+    const needFixedPlus = fixedMonthly + (isFinite(s.target) ? s.target : 0);
+    if (cmPerUnit > 0) {
+      needQty = needFixedPlus / cmPerUnit;
+      needSales = needQty * s.price;
+    }
+
+    // fixed per unit ref
+    const fixedPerUnitRef = (s.qty > 0) ? fixedMonthly / s.qty : NaN;
+
+    // outputs
+    el("cmPerUnit").textContent = fmtYen(cmPerUnit);
+    el("cmRate").textContent = fmtPct(cmRate);
+    el("beQty").textContent = isFinite(beQty) ? (fmtNum(beQty) + " 個") : "-";
+    el("beSales").textContent = isFinite(beSales) ? fmtYen(beSales) : "-";
+
+    el("curProfit").textContent = fmtYen(curProfit);
+    const status = (isFinite(curProfit) && curProfit >= 0) ? "黒字見込み" : "赤字見込み";
+    el("curMeta").innerHTML =
+      `<span class="${(isFinite(curProfit) && curProfit >= 0) ? "ok" : "warn"}">${status}</span><br/>` +
+      `売上 ${fmtYen(curSales)} / 変動費 ${fmtYen(curVarTotal)} / 固定費 ${fmtYen(fixedMonthly)}`;
+
+    el("beMeta").innerHTML =
+      `固定費（推定） ${fmtYen(fixedMonthly)} ÷ 限界利益 ${fmtYen(cmPerUnit)}<br/>` +
+      `（労務・間接の固定分は、想定数量 ${fmtNum(s.qty)} 個/月 を基準に月額換算）`;
+
+    el("mos").textContent = isFinite(mos) ? fmtPct(mos) : "-";
+
+    el("needQty").textContent = isFinite(needQty) ? (fmtNum(needQty) + " 個") : "-";
+    el("needSales").textContent = isFinite(needSales) ? fmtYen(needSales) : "-";
+
+    el("varCost").textContent = fmtYen(varCostPerUnit);
+    el("fixedCost").textContent = fmtYen(fixedMonthly);
+    el("fixedPerUnit").textContent = isFinite(fixedPerUnitRef) ? fmtYen(fixedPerUnitRef) : "-";
+
+    // alerts / tips
+    const tips = [];
+    if (cmPerUnit > 0 && isFinite(beQty) && s.qty > 0) {
+      if (s.qty < beQty) tips.push("想定数量が損益分岐点数量を下回っています。単価UP・変動費DOWN・固定費削減・数量増のいずれかが必要です。");
+      else tips.push("想定数量が損益分岐点数量を上回っています。原価の変動/固定の前提を変えると、分岐点の感度が確認できます。");
+    }
+    if (s.laborVar < 0.2) tips.push("労務の変動割合が低めです（固定給中心の前提）。派遣/残業/外注の増減が大きい現場なら上げると実態に近づきます。");
+    if (s.mohVar < 0.3) tips.push("間接費の変動割合が低めです。電力・消耗品・工具費が数量連動するなら上げてみてください。");
+
+    el("alerts").innerHTML = [
+      ...alerts.map(a => `⚠️ ${a}`),
+      ...tips.map(t => `💡 ${t}`)
+    ].join("<br/>") || "—";
+  };
+
+  const setDefaults = () => {
+    el("productName").value = "";
+    el("price").value = 10000;
+    el("qty").value = 200;
+    el("mat").value = 2500;
+    el("subcon").value = 1200;
+    el("labor").value = 1800;
+    el("moh").value = 900;
+    el("sgaf").value = 800000;
+    el("target").value = 200000;
+    el("laborVar").value = 40;
+    el("mohVar").value = 60;
+    setSliderLabels();
+    calc();
+  };
+
+  const bind = () => {
+    ["productName","price","qty","mat","subcon","labor","moh","sgaf","target","laborVar","mohVar"]
+      .forEach(id => el(id).addEventListener("input", () => calc()));
+
+    el("calcBtn").addEventListener("click", calc);
+    el("resetBtn").addEventListener("click", () => {
+      history.replaceState(null, "", location.pathname);
+      setDefaults();
+    });
+
+    // URL share (query string)
+    el("shareBtn").addEventListener("click", async () => {
+      const s = stateFromInputs();
+      const params = new URLSearchParams({
+        n: s.productName,
+        p: String(s.price),
+        q: String(s.qty),
+        m: String(s.mat),
+        sc: String(s.subcon),
+        l: String(s.labor),
+        oh: String(s.moh),
+        sg: String(s.sgaf),
+        t: String(s.target),
+        lv: String(Math.round(s.laborVar*100)),
+        ov: String(Math.round(s.mohVar*100)),
+      });
+      const url = location.origin + location.pathname + "?" + params.toString();
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("URLをコピーしました。\n\n" + url);
+      } catch {
+        prompt("このURLをコピーして共有できます:", url);
+      }
+    });
+  };
+
+  const loadFromURL = () => {
+    const u = new URL(location.href);
+    const g = (k, fallback=null) => u.searchParams.get(k) ?? fallback;
+
+    const pName = g("n","");
+    if (pName !== null) el("productName").value = pName;
+
+    const mapNum = (id, key) => {
+      const v = g(key, null);
+      if (v !== null && v !== "" && !isNaN(Number(v))) el(id).value = Number(v);
+    };
+
+    mapNum("price","p");
+    mapNum("qty","q");
+    mapNum("mat","m");
+    mapNum("subcon","sc");
+    mapNum("labor","l");
+    mapNum("moh","oh");
+    mapNum("sgaf","sg");
+    mapNum("target","t");
+
+    const lv = g("lv", null);
+    if (lv !== null && !isNaN(Number(lv))) el("laborVar").value = Math.max(0, Math.min(100, Number(lv)));
+    const ov = g("ov", null);
+    if (ov !== null && !isNaN(Number(ov))) el("mohVar").value = Math.max(0, Math.min(100, Number(ov)));
+
+    setSliderLabels();
+  };
+
+  // init
+  bind();
+  loadFromURL();
+  calc();
+})();
+</script>
+</body>
+</html>
