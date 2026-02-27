@@ -37,49 +37,6 @@
     .warn { color:#b00020; font-weight: 700; }
     .ok { color:#0a7a2f; font-weight: 800; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
-    /* ===== OUTPUT タブ ===== */
-    .tabs { display:flex; gap:8px; margin-bottom: 10px; }
-    .tabBtn{
-      flex:1;
-      padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid #e6e6e6;
-      background:#fafafa;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .tabBtn.active{ background:#111; color:#fff; border-color:#111; }
-    .tabPanel{ display:none; }
-    .tabPanel.active{ display:block; }
-
-    /* グラフ表示 */
-    .chartCard{
-      border:1px solid #eee;
-      border-radius: 12px;
-      padding: 12px;
-      background:#fcfcfc;
-      margin-top: 10px;
-    }
-    .chartTitle{ font-weight:900; margin-bottom:6px; }
-    canvas{ width:100%; height:220px; display:block; }
-    .legendRow{
-      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
-      font-size:12px; color:#555;
-    }
-    .dot{
-      width:10px; height:10px; border-radius:999px; display:inline-block; margin-right:6px;
-      border:1px solid rgba(0,0,0,.15);
-    }
-    .kv{
-      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
-      border-top:1px dashed #e7e7e7; padding-top:10px; margin-top:10px;
-      font-size:12px; color:#555;
-    }
-    .pill{
-      display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #e6e6e6;
-      background:#fff; font-size:12px; color:#444;
-    }
   </style>
 </head>
 <body>
@@ -185,103 +142,62 @@
 
       <!-- OUTPUT -->
       <div class="card">
-        <!-- タブ -->
-        <div class="tabs" role="tablist" aria-label="表示切替">
-          <button class="tabBtn active" id="tabNumbers" type="button" role="tab" aria-selected="true">数値</button>
-          <button class="tabBtn" id="tabCharts" type="button" role="tab" aria-selected="false">グラフ</button>
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <div style="font-size:12px; color:#444;">損益分岐点売上高（円/月）</div>
+            <div class="kpi" id="beSales">-</div>
+            <div class="hint" id="beMeta">-</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px; color:#444;">現在の見込み</div>
+            <div class="kpi" id="curProfit">-</div>
+            <div class="hint" id="curMeta">-</div>
+          </div>
         </div>
 
-        <!-- ===== 数値パネル ===== -->
-        <div class="tabPanel active" id="panelNumbers" role="tabpanel">
-          <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-            <div>
-              <div style="font-size:12px; color:#444;">損益分岐点売上高（円/月）</div>
-              <div class="kpi" id="beSales">-</div>
-              <div class="hint" id="beMeta">-</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:12px; color:#444;">現在の見込み</div>
-              <div class="kpi" id="curProfit">-</div>
-              <div class="hint" id="curMeta">-</div>
-            </div>
-          </div>
+        <table>
+          <tbody>
+            <tr>
+              <th>限界利益（円/個）</th>
+              <td id="cmPerUnit">-</td>
+            </tr>
+            <tr>
+              <th>限界利益率（%）</th>
+              <td id="cmRate">-</td>
+            </tr>
+            <tr>
+              <th>損益分岐点数量（個/月）</th>
+              <td id="beQty">-</td>
+            </tr>
+            <tr>
+              <th>安全余裕率（%）</th>
+              <td id="mos">-</td>
+            </tr>
+            <tr>
+              <th>目標利益達成に必要な売上高（円/月）</th>
+              <td id="needSales">-</td>
+            </tr>
+            <tr>
+              <th>目標利益達成に必要な数量（個/月）</th>
+              <td id="needQty">-</td>
+            </tr>
+          </tbody>
+        </table>
 
+        <div style="margin-top:12px; padding:12px; border:1px dashed #e5e5e5; border-radius:12px;">
+          <div style="font-weight:900; margin-bottom:6px;">原価内訳（1個あたり）</div>
+          <div class="small">※スライダーを反映した「変動費」「固定費（換算）」を表示</div>
           <table>
             <tbody>
-              <tr><th>限界利益（円/個）</th><td id="cmPerUnit">-</td></tr>
-              <tr><th>限界利益率（%）</th><td id="cmRate">-</td></tr>
-              <tr><th>損益分岐点数量（個/月）</th><td id="beQty">-</td></tr>
-              <tr><th>安全余裕率（%）</th><td id="mos">-</td></tr>
-              <tr><th>目標利益達成に必要な売上高（円/月）</th><td id="needSales">-</td></tr>
-              <tr><th>目標利益達成に必要な数量（個/月）</th><td id="needQty">-</td></tr>
+              <tr><th>変動費（円/個）</th><td id="varCost">-</td></tr>
+              <tr><th>固定費（円/月）</th><td id="fixedCost">-</td></tr>
+              <tr><th>固定費（1個あたり換算・参考）</th><td id="fixedPerUnit">-</td></tr>
             </tbody>
           </table>
-
-          <div style="margin-top:12px; padding:12px; border:1px dashed #e5e5e5; border-radius:12px;">
-            <div style="font-weight:900; margin-bottom:6px;">原価内訳（1個あたり）</div>
-            <div class="small">※スライダーを反映した「変動費」「固定費（換算）」を表示</div>
-            <table>
-              <tbody>
-                <tr><th>変動費（円/個）</th><td id="varCost">-</td></tr>
-                <tr><th>固定費（円/月）</th><td id="fixedCost">-</td></tr>
-                <tr><th>固定費（1個あたり換算・参考）</th><td id="fixedPerUnit">-</td></tr>
-              </tbody>
-            </table>
-            <div class="hint">固定費の「1個あたり換算」は、入力した販売数量で割った参考値です（分岐点計算は固定費合計で行います）。</div>
-          </div>
-
-          <div class="hint" id="alerts"></div>
+          <div class="hint">固定費の「1個あたり換算」は、入力した販売数量で割った参考値です（分岐点計算は固定費合計で行います）。</div>
         </div>
 
-        <!-- ===== グラフパネル ===== -->
-        <div class="tabPanel" id="panelCharts" role="tabpanel">
-          <div class="chartCard">
-            <div class="chartTitle">CVP（売上・費用・利益）グラフ</div>
-            <div class="small">横軸：数量（個/月）　縦軸：金額（円/月）</div>
-            <canvas id="cvpCanvas" width="900" height="520"></canvas>
-
-            <div class="legendRow">
-              <span><span class="dot" style="background:#111;"></span>売上</span>
-              <span><span class="dot" style="background:#2e7d32;"></span>総費用（変動費＋固定費）</span>
-              <span><span class="dot" style="background:#6a5acd;"></span>目標利益ライン（総費用＋目標利益）</span>
-              <span><span class="dot" style="background:#ff9100;"></span>損益分岐点</span>
-              <span><span class="dot" style="background:#00b0ff;"></span>現在数量</span>
-              <span><span class="dot" style="background:#6a5acd;"></span>目標達成点</span>
-            </div>
-
-            <div class="kv">
-              <div>
-                <span class="pill">限界利益</span>
-                <b id="cmPerUnit2">-</b>
-                <span class="small">（</span><b id="cmRate2">-</b><span class="small">）</span>
-              </div>
-              <div>
-                <span class="pill">安全余裕</span>
-                <b id="mosQty2">-</b>
-                <span class="small"> / </span><b id="mosPct2">-</b>
-              </div>
-              <div>
-                <span class="pill">BE</span>
-                <b id="beQty2">-</b><span class="small">個</span>
-                <span class="small"> / </span><b id="beSales2">-</b>
-              </div>
-              <div>
-                <span class="pill">現在</span>
-                <b id="curQty2">-</b><span class="small">個</span>
-                <span class="small"> / 売上 </span><b id="curSales2">-</b>
-                <span class="small"> / 利益 </span><b id="curProfit2">-</b>
-              </div>
-              <div>
-                <span class="pill">目標達成</span>
-                <b id="needQty2">-</b><span class="small">個</span>
-                <span class="small"> / </span><b id="needSales2">-</b>
-              </div>
-            </div>
-          </div>
-
-          <div class="hint" id="chartNote">—</div>
-        </div>
-
+        <div class="hint" id="alerts"></div>
       </div>
     </div>
   </div>
@@ -322,235 +238,6 @@
     el("mohVarPct").textContent = el("mohVar").value;
   };
 
-  /* ===== タブ切り替え ===== */
-  const setTab = (name) => {
-    const isNumbers = name === "numbers";
-    el("tabNumbers").classList.toggle("active", isNumbers);
-    el("tabCharts").classList.toggle("active", !isNumbers);
-    el("tabNumbers").setAttribute("aria-selected", isNumbers ? "true" : "false");
-    el("tabCharts").setAttribute("aria-selected", !isNumbers ? "true" : "false");
-    el("panelNumbers").classList.toggle("active", isNumbers);
-    el("panelCharts").classList.toggle("active", !isNumbers);
-
-    if (!isNumbers) requestAnimationFrame(() => drawCVP(lastCalc));
-  };
-
-  /* ===== グラフ描画（Canvas） ===== */
-  const canvas = () => el("cvpCanvas");
-  const ctx = () => canvas().getContext("2d");
-
-  const drawLine = (c, x1,y1,x2,y2, stroke, w=2, dash=null) => {
-    c.save();
-    c.strokeStyle = stroke;
-    c.lineWidth = w;
-    if (dash) c.setLineDash(dash);
-    c.beginPath();
-    c.moveTo(x1,y1);
-    c.lineTo(x2,y2);
-    c.stroke();
-    c.restore();
-  };
-
-  const drawDot = (c, x,y, r, fill, stroke="rgba(0,0,0,.15)") => {
-    c.save();
-    c.fillStyle = fill;
-    c.strokeStyle = stroke;
-    c.lineWidth = 2;
-    c.beginPath();
-    c.arc(x,y,r,0,Math.PI*2);
-    c.fill();
-    c.stroke();
-    c.restore();
-  };
-
-  const drawText = (c, text, x, y, fill="#111", font="12px system-ui", align="left") => {
-    c.save();
-    c.fillStyle = fill;
-    c.font = font;
-    c.textAlign = align;
-    c.fillText(text, x, y);
-    c.restore();
-  };
-
-  const drawGrid = (c, W, H, pad) => {
-    c.save();
-    c.clearRect(0,0,W,H);
-
-    c.fillStyle = "#ffffff";
-    c.fillRect(0,0,W,H);
-
-    c.strokeStyle = "#e8e8e8";
-    c.lineWidth = 1;
-    c.strokeRect(0.5,0.5,W-1,H-1);
-
-    const gx = 5, gy = 5;
-    for (let i=1;i<gx;i++){
-      const x = pad + (W-2*pad)*(i/gx);
-      drawLine(c, x, pad, x, H-pad, "#f1f1f1", 1);
-    }
-    for (let i=1;i<gy;i++){
-      const y = pad + (H-2*pad)*(i/gy);
-      drawLine(c, pad, y, W-pad, y, "#f1f1f1", 1);
-    }
-    c.restore();
-  };
-
-  const niceMax = (v) => {
-    if (!isFinite(v) || v <= 0) return 1;
-    const pow = Math.pow(10, Math.floor(Math.log10(v)));
-    const n = v / pow;
-    const m = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
-    return m;
-  };
-
-  const drawBracket = (c, x1, x2, y, color, label) => {
-    const a = Math.min(x1,x2), b = Math.max(x1,x2);
-    if (Math.abs(b-a) < 10) return;
-    drawLine(c, a, y, b, y, color, 3);
-    drawLine(c, a, y-8, a, y+8, color, 3);
-    drawLine(c, b, y-8, b, y+8, color, 3);
-    drawText(c, label, (a+b)/2, y-10, color, "12px system-ui", "center");
-  };
-
-  const drawCVP = (r) => {
-    if (!r) return;
-    const cv = canvas();
-    if (!cv) return;
-    const c = ctx();
-    const W = cv.width, H = cv.height;
-    const pad = 42;
-
-    const hasCM = isFinite(r.cmPerUnit) && r.cmPerUnit > 0;
-    const targetMonthly = Math.max(0, isFinite(r.targetMonthly) ? r.targetMonthly : 0);
-
-    // スケール：数量0..maxQ / 金額0..maxY
-    const maxQ = Math.max(
-      1,
-      Math.ceil(Math.max(
-        r.qty,
-        isFinite(r.beQty) ? r.beQty : 0,
-        isFinite(r.needQty) ? r.needQty : 0
-      ) * 1.25)
-    );
-
-    const yAtMaxQ_sales = r.price * maxQ;
-    const yAtMaxQ_cost  = (r.varCostPerUnit * maxQ) + r.fixedMonthly;
-    const yAtMaxQ_target = (r.varCostPerUnit * maxQ) + r.fixedMonthly + targetMonthly;
-    const maxYraw = Math.max(yAtMaxQ_sales, yAtMaxQ_cost, yAtMaxQ_target, r.fixedMonthly + targetMonthly, 1);
-    const maxY = niceMax(maxYraw);
-
-    const xToPx = (q) => pad + (W - 2*pad) * (q / maxQ);
-    const yToPx = (y) => (H - pad) - (H - 2*pad) * (y / maxY);
-
-    drawGrid(c, W, H, pad);
-
-    // 軸ラベル（簡易）
-    drawText(c, "0", pad, H - pad + 18, "#666", "12px system-ui", "center");
-    drawText(c, fmtNum(maxQ), W - pad, H - pad + 18, "#666", "12px system-ui", "center");
-    drawText(c, "0", pad - 10, H - pad + 4, "#666", "12px system-ui", "right");
-    drawText(c, fmtNum(maxY), pad - 10, pad + 4, "#666", "12px system-ui", "right");
-
-    // 売上線（黒）
-    drawLine(c, xToPx(0), yToPx(0), xToPx(maxQ), yToPx(r.price * maxQ), "#111", 2.5);
-
-    // 総費用線（緑）：固定費 + 変動費*Q
-    drawLine(
-      c,
-      xToPx(0), yToPx(r.fixedMonthly),
-      xToPx(maxQ), yToPx(r.fixedMonthly + r.varCostPerUnit * maxQ),
-      "#2e7d32", 2.5
-    );
-
-    // 目標利益ライン（紫）：固定費+目標利益 + 変動費*Q
-    drawLine(
-      c,
-      xToPx(0), yToPx(r.fixedMonthly + targetMonthly),
-      xToPx(maxQ), yToPx(r.fixedMonthly + targetMonthly + r.varCostPerUnit * maxQ),
-      "#6a5acd", 2.5,
-      [6,4]
-    );
-    // 目標利益（基準線）水平
-    if (targetMonthly > 0) {
-      drawLine(c, xToPx(0), yToPx(r.fixedMonthly + targetMonthly), xToPx(maxQ), yToPx(r.fixedMonthly + targetMonthly), "rgba(106,90,205,.15)", 2);
-      drawText(c, "固定費＋目標利益", xToPx(0)+6, yToPx(r.fixedMonthly + targetMonthly)-6, "rgba(106,90,205,.75)", "12px system-ui");
-    }
-
-    // 固定費水平線（薄いグレー）
-    drawLine(c, xToPx(0), yToPx(r.fixedMonthly), xToPx(maxQ), yToPx(r.fixedMonthly), "rgba(0,0,0,.08)", 2);
-    drawText(c, "固定費", xToPx(0)+6, yToPx(r.fixedMonthly)-6, "rgba(0,0,0,.45)", "12px system-ui");
-
-    // BE点（オレンジ）
-    if (isFinite(r.beQty) && r.beQty >= 0 && hasCM) {
-      const bx = xToPx(r.beQty);
-      const by = yToPx(r.beSales);
-      drawLine(c, bx, pad, bx, H - pad, "rgba(255,145,0,.25)", 2);
-      drawDot(c, bx, by, 6, "#ff9100");
-      drawText(c, "BE", bx + 10, by - 10, "#ff9100", "12px system-ui");
-    }
-
-    // 現在点（水色）
-    if (isFinite(r.qty) && r.qty >= 0) {
-      const cx = xToPx(r.qty);
-      const cy = yToPx(r.curSales);
-      drawLine(c, cx, pad, cx, H - pad, "rgba(0,176,255,.25)", 2);
-      drawDot(c, cx, cy, 6, "#00b0ff");
-      drawText(c, "NOW", cx + 10, cy - 10, "#00b0ff", "12px system-ui");
-    }
-
-    // 目標達成点（紫）
-    if (isFinite(r.needQty) && r.needQty >= 0 && hasCM) {
-      const tx = xToPx(r.needQty);
-      const ty = yToPx(r.needSales);
-      drawLine(c, tx, pad, tx, H - pad, "rgba(106,90,205,.20)", 2, [6,4]);
-      drawDot(c, tx, ty, 6, "#6a5acd");
-      drawText(c, "TARGET", tx + 10, ty - 10, "#6a5acd", "12px system-ui");
-    }
-
-    // 安全余裕（BE↔NOWをブラケット表示）
-    if (hasCM && isFinite(r.beQty) && isFinite(r.qty) && r.qty > 0) {
-      const mosQty = r.qty - r.beQty;
-      if (isFinite(mosQty) && mosQty > 0) {
-        const y = H - pad - 10;
-        drawBracket(
-          c,
-          xToPx(r.beQty),
-          xToPx(r.qty),
-          y,
-          "rgba(0,0,0,.45)",
-          `安全余裕 ${fmtNum(mosQty)}個（${fmtPct(r.mosPct)}）`
-        );
-      }
-    }
-
-    // 情報欄更新
-    el("cmPerUnit2").textContent = fmtYen(r.cmPerUnit);
-    el("cmRate2").textContent = fmtPct(r.cmRatePct);
-
-    el("beQty2").textContent = isFinite(r.beQty) ? fmtNum(r.beQty) : "-";
-    el("beSales2").textContent = isFinite(r.beSales) ? fmtYen(r.beSales) : "-";
-
-    el("curQty2").textContent = fmtNum(r.qty);
-    el("curSales2").textContent = fmtYen(r.curSales);
-    el("curProfit2").textContent = fmtYen(r.curProfit);
-
-    el("needQty2").textContent = isFinite(r.needQty) ? fmtNum(r.needQty) : "-";
-    el("needSales2").textContent = isFinite(r.needSales) ? fmtYen(r.needSales) : "-";
-
-    const mosQty2 = (isFinite(r.beQty) && isFinite(r.qty)) ? (r.qty - r.beQty) : NaN;
-    el("mosQty2").textContent = isFinite(mosQty2) ? (fmtNum(mosQty2) + " 個") : "-";
-    el("mosPct2").textContent = isFinite(r.mosPct) ? fmtPct(r.mosPct) : "-";
-
-    // 説明
-    const lines = [];
-    lines.push(`売上＝単価×数量（黒）／総費用＝固定費＋変動費×数量（緑）`);
-    lines.push(`目標利益ライン＝（固定費＋目標利益）＋変動費×数量（紫・点線）`);
-    if (!hasCM) lines.push(`⚠️ 限界利益（単価−変動費）が0以下のため、BE/目標達成点が成立しません。`);
-    el("chartNote").innerHTML = lines.join("<br/>");
-  };
-
-  /* calc結果を保持して、タブ切替で再描画 */
-  let lastCalc = null;
-
   const calc = () => {
     setSliderLabels();
     const s = stateFromInputs();
@@ -572,11 +259,13 @@
     const varCostPerUnit = s.mat + s.subcon + laborVarCost + mohVarCost;
 
     // fixed per month: SGA fixed + (fixed parts converted to monthly using qty assumption)
+    // For break-even, fixed should be "total fixed per month". Here we estimate fixed parts from per-unit inputs by multiplying by qty.
+    // (User can set qty to their normal production level for the month.)
     const fixedFromPerUnitMonthly = (laborFixPart + mohFixPart) * s.qty;
     const fixedMonthly = s.sgaf + fixedFromPerUnitMonthly;
 
-    const cmPerUnit = s.price - varCostPerUnit;
-    const cmRatePct = s.price > 0 ? (cmPerUnit / s.price) * 100 : NaN;
+    const cmPerUnit = s.price - varCostPerUnit; // contribution margin
+    const cmRate = s.price > 0 ? (cmPerUnit / s.price) * 100 : NaN;
 
     let beQty = NaN, beSales = NaN;
     if (cmPerUnit > 0) {
@@ -592,12 +281,11 @@
     const curProfit = curSales - curVarTotal - fixedMonthly;
 
     // margin of safety
-    const mosPct = (isFinite(beSales) && beSales > 0 && curSales > 0) ? ((curSales - beSales) / curSales) * 100 : NaN;
+    const mos = (isFinite(beSales) && beSales > 0 && curSales >= 0) ? ((curSales - beSales) / curSales) * 100 : NaN;
 
     // target profit requirements
     let needQty = NaN, needSales = NaN;
-    const targetMonthly = isFinite(s.target) ? s.target : 0;
-    const needFixedPlus = fixedMonthly + targetMonthly;
+    const needFixedPlus = fixedMonthly + (isFinite(s.target) ? s.target : 0);
     if (cmPerUnit > 0) {
       needQty = needFixedPlus / cmPerUnit;
       needSales = needQty * s.price;
@@ -606,9 +294,9 @@
     // fixed per unit ref
     const fixedPerUnitRef = (s.qty > 0) ? fixedMonthly / s.qty : NaN;
 
-    // outputs (numbers tab)
+    // outputs
     el("cmPerUnit").textContent = fmtYen(cmPerUnit);
-    el("cmRate").textContent = fmtPct(cmRatePct);
+    el("cmRate").textContent = fmtPct(cmRate);
     el("beQty").textContent = isFinite(beQty) ? (fmtNum(beQty) + " 個") : "-";
     el("beSales").textContent = isFinite(beSales) ? fmtYen(beSales) : "-";
 
@@ -622,7 +310,7 @@
       `固定費（推定） ${fmtYen(fixedMonthly)} ÷ 限界利益 ${fmtYen(cmPerUnit)}<br/>` +
       `（労務・間接の固定分は、想定数量 ${fmtNum(s.qty)} 個/月 を基準に月額換算）`;
 
-    el("mos").textContent = isFinite(mosPct) ? fmtPct(mosPct) : "-";
+    el("mos").textContent = isFinite(mos) ? fmtPct(mos) : "-";
 
     el("needQty").textContent = isFinite(needQty) ? (fmtNum(needQty) + " 個") : "-";
     el("needSales").textContent = isFinite(needSales) ? fmtYen(needSales) : "-";
@@ -644,31 +332,6 @@
       ...alerts.map(a => `⚠️ ${a}`),
       ...tips.map(t => `💡 ${t}`)
     ].join("<br/>") || "—";
-
-    // keep for chart tab
-    lastCalc = {
-      price: s.price,
-      qty: s.qty,
-      targetMonthly: Math.max(0, targetMonthly),
-
-      varCostPerUnit,
-      fixedMonthly,
-      cmPerUnit,
-      cmRatePct,
-
-      beQty,
-      beSales,
-      curSales,
-      curProfit,
-
-      needQty,
-      needSales,
-
-      mosPct,
-    };
-
-    // redraw if chart visible
-    if (el("panelCharts").classList.contains("active")) drawCVP(lastCalc);
   };
 
   const setDefaults = () => {
@@ -697,9 +360,6 @@
       setDefaults();
     });
 
-    el("tabNumbers").addEventListener("click", () => setTab("numbers"));
-    el("tabCharts").addEventListener("click", () => setTab("charts"));
-
     // URL share (query string)
     el("shareBtn").addEventListener("click", async () => {
       const s = stateFromInputs();
@@ -723,10 +383,6 @@
       } catch {
         prompt("このURLをコピーして共有できます:", url);
       }
-    });
-
-    window.addEventListener("resize", () => {
-      if (el("panelCharts").classList.contains("active")) drawCVP(lastCalc);
     });
   };
 
